@@ -16,8 +16,7 @@
 			place-content: center;
 			margin-top: 20px;
 			flex-wrap: wrap;
-}
-        }
+		}
 
         #folderOptions label {
             margin-right: 15px;
@@ -25,46 +24,44 @@
             color: #333;
         }
 
-#openUrl {
-    position: relative;
-    padding: 10px 20px;
-    font-size: 16px;
-    color: white;
-    background-color: #007bff;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    transition: background-color 0.3s ease;
-    overflow: hidden; /* Ensure the paw print does not overflow the button */
-}
+		#openUrl {
+			position: relative;
+			padding: 10px 20px;
+			font-size: 16px;
+			color: white;
+			background-color: #007bff;
+			border: none;
+			border-radius: 5px;
+			cursor: pointer;
+			transition: background-color 0.3s ease;
+			overflow: hidden; /* Ensure the paw print does not overflow the button */
+		}
 
-.catPaw {
-    position: absolute;
-    left: 50%;
-    top: 50%;
-	opacity: 50%;
-    transform: translate(-50%, -50%) scale(0);
-    transition: transform 0.3s ease;
-    font-size: 20px; /* Size of the paw print */
-}
+		.catPaw {
+			position: absolute;
+			left: 50%;
+			top: 50%;
+			opacity: 50%;
+			transform: translate(-50%, -50%) scale(0);
+			transition: transform 0.3s ease;
+			font-size: 20px; /* Size of the paw print */
+		}
 
-@keyframes pawBounce {
-    0% {
-        transform: translate(-50%, -50%) scale(1) translateY(0);
-    }
-    50% {
-        transform: translate(-50%, -50%) scale(1.5) translateY(-10px);
-    }
-    100% {
-        transform: translate(-50%, -50%) scale(1) translateY(0);
-    }
-}
+		@keyframes pawBounce {
+			0% {
+				transform: translate(-50%, -50%) scale(1) translateY(0);
+			}
+			50% {
+				transform: translate(-50%, -50%) scale(1.5) translateY(-10px);
+			}
+			100% {
+				transform: translate(-50%, -50%) scale(1) translateY(0);
+			}
+		}
 
-#openUrl:hover .catPaw {
-    animation: pawBounce 0.5s ease-in-out infinite;
-}
-
-
+		#openUrl:hover .catPaw {
+			animation: pawBounce 0.5s ease-in-out infinite;
+		}
 
         #openUrl:hover {
             background-color: #0056b3;

@@ -8,6 +8,8 @@ const port = 3000;
 app.use(cors());
 app.use(express.static('public'));
 
+let sessionHistory = new Set();
+
 let lastRequestTime = 0;
 
 function rateLimit(req, res, next) {
@@ -44,15 +46,23 @@ function getRandomUrl(validFolders) {
     try {
         const data = fs.readFileSync(validsFilePath, 'utf8');
         const urls = data.split('\n').filter(Boolean);
-        if (urls.length === 0) {
-            return null;
+
+        // Check if all URLs have been served
+        const unservedUrls = urls.filter(url => !sessionHistory.has(url));
+        if (unservedUrls.length === 0) {
+            // Reset session history if all URLs have been served
+            sessionHistory.clear();
+            return urls[Math.floor(Math.random() * urls.length)];
         }
-        return urls[Math.floor(Math.random() * urls.length)];
+
+        return unservedUrls[Math.floor(Math.random() * unservedUrls.length)];
+
     } catch (err) {
         console.error(`Error reading file ${validsFilePath}:`, err);
         return null;
     }
 }
+
 
 
 // Endpoint to get available folders
@@ -73,14 +83,18 @@ app.get('/random-url', rateLimit, (req, res) => {
         selectedFolders.includes(path.basename(folderPath))
     );
 
-    const url = getRandomUrl(validFolders); // Pass the valid folders
+    const url = getRandomUrl(validFolders);
     if (url) {
+        sessionHistory.add(url); // Add the served URL to the session history
         res.send({ url });
     } else {
-        res.status(404).send({ error: 'No valid URLs found.' });
+        res.status(200).send({ message: 'No valid URLs found.' });
     }
 });
 
+
+// Example: Resetting the session history
+sessionHistory = new Set();
 
 
 app.listen(port, () => {
