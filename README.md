@@ -1,8 +1,10 @@
-# Catbox Scraper
+# Catbox Scraper Webui
 
-An extremely fast python script for scraping and downloading random files from [Catbox](https://catbox.moe), a file-hosting site.
+An extremely fast python script for scraping and downloading random files from [Catbox](https://catbox.moe), a file-hosting site with a basic webui to browser them.
 
-The script takes from file extensions specified under config.yaml, generates random urls and checks to see if they are valid. If they are, it downloads them and stores them in extension-sorted folders.
+The script takes from file extensions specified under config.yaml, generates random urls and checks to see if they are valid. If they are, it put the URLs in valids.txt that you can browser later with the webui.
+
+![image](https://github.com/EMRD95/catbox-scraper-webui/assets/114953576/6b113033-5f8a-4665-8b14-a5711f70d75d)
 
 `https://files.catbox.moe/[a-z0-9]{6}.(extension)` is the format for URL generation.
 
@@ -13,15 +15,24 @@ https://github.com/dootss/catbox-scraper/assets/126783585/c0213d13-01ec-4a55-80c
 You will need:
 - Python
 - Git
+- npm (optional for webui)
 ```
 git clone https://github.com/dootss/catbox-scraper.git
 cd catbox-scraper
 pip install -r requirements.txt
 python main.py
 ```
-and the script will handle everything else from there!
+the script will gather links.
 
 Press CTRL+C to stop the script.
+
+To set up the webui
+
+```
+npm init -y
+npm install express cors
+node app.js
+```
 
 ## Configuration
 If you wish to change the extensions the script attempts to check for, simply edit `config.yaml`'s `file_extensions` field with the extensions you wish to check for:
