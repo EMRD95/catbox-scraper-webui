@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Random URL Opener</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f4f4f4;
+            text-align: center;
+            padding: 50px;
+        }
+
+        #folderOptions {
+            margin-bottom: 20px;
+			display: flex;
+			place-content: center;
+			margin-top: 20px;
+			flex-wrap: wrap;
+}
+        }
+
+        #folderOptions label {
+            margin-right: 15px;
+            font-size: 16px;
+            color: #333;
+        }
+
+#openUrl {
+    position: relative;
+    padding: 10px 20px;
+    font-size: 16px;
+    color: white;
+    background-color: #007bff;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    overflow: hidden; /* Ensure the paw print does not overflow the button */
+}
+
+.catPaw {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+	opacity: 50%;
+    transform: translate(-50%, -50%) scale(0);
+    transition: transform 0.3s ease;
+    font-size: 20px; /* Size of the paw print */
+}
+
+@keyframes pawBounce {
+    0% {
+        transform: translate(-50%, -50%) scale(1) translateY(0);
+    }
+    50% {
+        transform: translate(-50%, -50%) scale(1.5) translateY(-10px);
+    }
+    100% {
+        transform: translate(-50%, -50%) scale(1) translateY(0);
+    }
+}
+
+#openUrl:hover .catPaw {
+    animation: pawBounce 0.5s ease-in-out infinite;
+}
+
+
+
+        #openUrl:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <button id="openUrl"><span class="catPaw">🎲</span> Open Random URL</button>
+
+    <div id="folderOptions"></div>
+    <script>
+        // Function to fetch and display folder options
+        function fetchAndDisplayFolders() {
+            fetch('http://localhost:3000/folders')
+                .then(response => response.json())
+                .then(folders => {
+                    const container = document.getElementById('folderOptions');
+                    folders.forEach(folder => {
+                        const checkbox = document.createElement('input');
+                        checkbox.type = 'checkbox';
+                        checkbox.id = folder;
+                        checkbox.value = folder;
+                        checkbox.checked = true; // Default to checked
+                        const label = document.createElement('label');
+                        label.htmlFor = folder;
+                        label.appendChild(document.createTextNode(folder));
+                        container.appendChild(checkbox);
+                        container.appendChild(label);
+                        container.appendChild(document.createElement('br'));
+                    });
+                })
+                .catch(error => console.error('Error:', error));
+        }
+
+        document.getElementById('openUrl').addEventListener('click', function() {
+            const selectedFolders = Array.from(document.querySelectorAll('#folderOptions input[type=checkbox]:checked'))
+                                        .map(checkbox => checkbox.value);
+            fetch(`http://localhost:3000/random-url?folders=${selectedFolders.join(',')}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.url) {
+                        window.open(data.url, '_blank');
+                    } else {
+                        console.error('No URL received');
+                    }
+                })
+                .catch(error => console.error('Error:', error));
+        });
+
+        fetchAndDisplayFolders();
+    </script>
+</body>
+</html>
