@@ -2,7 +2,7 @@
 
 An extremely fast python script for scraping and downloading random files from [Catbox](https://catbox.moe), a file-hosting site with a basic webui to browser them.
 
-The script takes from file extensions specified under config.yaml, generates random urls and checks to see if they are valid. If they are, it put the URLs in valids.txt that you can browser later with the webui. The script doesn't download anything to save bandwith and go faster, if you wish to download all files, use [the original repo](https://github.com/dootss/catbox-scraper).
+The script takes from file extensions specified under config.yaml, generates random urls and checks to see if they are valid. If they are, it put the URLs in valids.txt that you can browser later with the webui. The script doesn't download anything to save bandwidth and go faster, if you wish to download all files, use [the original repo](https://github.com/dootss/catbox-scraper).
 
 ![image](https://github.com/EMRD95/catbox-scraper-webui/assets/114953576/6b113033-5f8a-4665-8b14-a5711f70d75d)
 
