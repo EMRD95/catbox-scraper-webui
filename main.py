@@ -6,15 +6,13 @@ import random
 import string
 import asyncio
 import aiohttp
-import aiofiles
 import threading
-
+import aiofiles  # Importing aiofiles
 
 CONFIG_FILE = 'config.yaml'
 URL = 'https://files.catbox.moe/'
 os.system('')
 sys.stdout.write('\033[?25l')
-
 
 with open(CONFIG_FILE, 'r') as config_file:
     config = yaml.safe_load(config_file)
@@ -31,7 +29,6 @@ status_board_running = True
 print_lock = asyncio.Semaphore()
 file_lock = asyncio.Lock()
 
-
 def clear_screen():
     if sys.platform == 'linux' or sys.platform == 'linux2':
         os.system('clear')
@@ -46,14 +43,6 @@ def format_elapsed_time(seconds):
     minutes, seconds = divmod(remainder, 60)
     return f"{hours:02}:{minutes:02}:{seconds:02}"
 
-async def download_image(session, url, folder_name, random_filename):
-    async with session.get(url) as image_data:
-        if image_data.status == 200:
-            content = await image_data.read()
-            if content:
-                async with aiofiles.open(os.path.join(folder_name, random_filename), mode='wb') as f:
-                    await f.write(content)
-
 async def save_valid_url(folder_name, url):
     os.makedirs(folder_name, exist_ok=True)
     async with aiofiles.open(f"{folder_name}/valids.txt", "a") as file:
@@ -62,12 +51,10 @@ async def save_valid_url(folder_name, url):
 def status_board():
     global urls_scanned, valid_found, start_time, status_board_running
 
-
     while status_board_running:
         if urls_scanned > 0:
             elapsed_time = time.time() - start_time
             formatted_elapsed_time = format_elapsed_time(elapsed_time)
-
 
             sys.stdout.write('\033[5;1H[-----------------------]\n')
             sys.stdout.write(f'\033[7;1H TIME ELAPSED : {formatted_elapsed_time}\n')
@@ -91,8 +78,6 @@ async def check_url(_):
 
                         if response.status == 200:
                             valid_found += 1
-                            os.makedirs(ext.strip('.'), exist_ok=True)
-                            await download_image(session, random_url, ext.strip('.'), filename)
                             await save_valid_url(ext.strip('.'), random_url)
 
                 except asyncio.exceptions.TimeoutError:
@@ -103,7 +88,6 @@ async def check_url(_):
                     continue
                 except Exception as e:
                     print(f"Exception {type(e).__name__}: {e}")
-
 
 if __name__ == "__main__":
     clear_screen()
