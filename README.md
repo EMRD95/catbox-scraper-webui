@@ -42,6 +42,6 @@ If you wish to change the extensions the script attempts to check for, simply ed
 By default, the script checks for the following: `png, gif, jpg, jpeg, webm, mp4`
 
 ## NOTICE
-*I am not responsible for any consequences that come from using this script! Catbox is a file hosting site, and files found on it can be unpredictable. You'll definitely find a LOT of NSFW images as a result of running this; Catbox is used a fair amount by anonymous communities like 4chan.*
+*I am not responsible for any consequences that come from using this script! Catbox is a file hosting site, and files found on it can be unpredictable. You'll definitely find a LOT of NSFW images as a result of running this.
 
 
