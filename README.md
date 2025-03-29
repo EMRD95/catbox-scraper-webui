@@ -1,16 +1,12 @@
 # Catbox Scraper Webui
 
-**Note:** The original Python-based scraper no longer works reliably due to changes on Catbox.  
-**Instead,** we now have a **static website** that scrapes from your **web browser**. It’s **slower** than Python, but still “fast enough” to find valid files without triggering Catbox rate limits.
+**Note:** The original Python-based scraper no longer works reliably due to the implementation of rate limit on Catbox.  
+This repo just contains a youtube shorts like webui to show catbox videos you found.
 
-**Check it out here:**  
+**Demo:**  
 [https://emrd95.github.io/catbox-scraper-webui/](https://emrd95.github.io/catbox-scraper-webui/)
 
-## What It Does
-
-- Randomly guesses Catbox file URLs in your **browser** (JavaScript).
-- Any valid `.mp4` (or other extension) loads instantly on the page.
-- It’s simpler, lower-impact, and less likely to get you blocked than brute-force Python scripts.
+Run with **python -m http.server** and acess at [http://localhost:8000/index.html](http://localhost:8000/index.html)
 
 ## Old Setup (No Longer Maintained)
 
