@@ -1,117 +1,167 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Random URL Opener</title>
-    <style>
-        body {
-            font-family: 'Arial', sans-serif;
-            background-color: #f4f4f4;
-            text-align: center;
-            padding: 50px;
-        }
-
-        #folderOptions {
-            margin-bottom: 20px;
-			display: flex;
-			place-content: center;
-			margin-top: 20px;
-			flex-wrap: wrap;
-		}
-
-        #folderOptions label {
-            margin-right: 15px;
-            font-size: 16px;
-            color: #333;
-        }
-
-		#openUrl {
-			position: relative;
-			padding: 10px 20px;
-			font-size: 16px;
-			color: white;
-			background-color: #007bff;
-			border: none;
-			border-radius: 5px;
-			cursor: pointer;
-			transition: background-color 0.3s ease;
-			overflow: hidden; /* Ensure the paw print does not overflow the button */
-		}
-
-		.catPaw {
-			position: absolute;
-			left: 50%;
-			top: 50%;
-			opacity: 50%;
-			transform: translate(-50%, -50%) scale(0);
-			transition: transform 0.3s ease;
-			font-size: 20px; /* Size of the paw print */
-		}
-
-		@keyframes pawBounce {
-			0% {
-				transform: translate(-50%, -50%) scale(1) translateY(0);
-			}
-			50% {
-				transform: translate(-50%, -50%) scale(1.5) translateY(-10px);
-			}
-			100% {
-				transform: translate(-50%, -50%) scale(1) translateY(0);
-			}
-		}
-
-		#openUrl:hover .catPaw {
-			animation: pawBounce 0.5s ease-in-out infinite;
-		}
-
-        #openUrl:hover {
-            background-color: #0056b3;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <title>Catbox MP4 Finder</title>
+  <style>
+    body {
+      margin: 0; padding: 0; background: #000; color: #fff; 
+      font-family: sans-serif; padding-top: 60px; 
+    }
+    header {
+      position: fixed; top: 0; left: 0; width: 100%;
+      background: #222; text-align: center; padding: 10px; z-index: 999;
+    }
+    #stats, #controls { margin: 5px; }
+    button {
+      background: #555; color: #fff; border: none; padding: 8px;
+      border-radius: 5px; margin: 5px; cursor: pointer;
+    }
+    #startBtn { background: #28a745; }
+    #stopBtn  { background: #dc3545; }
+    /* Container: full width on mobile, up to 900px on desktop */
+    #container {
+      width: 100%; max-width: 900px; margin: 80px auto 0; 
+      padding: 0 10px; /* small side padding for desktop */
+    }
+    .videoItem {
+      width: 100%; margin: 0; padding: 0; margin-bottom: 20px;
+      background: #111; border-radius: 5px; overflow: hidden;
+    }
+    .videoItem video {
+      display: block; width: 100%; height: auto; object-fit: contain; background: #000;
+    }
+    footer {
+      text-align: center; padding: 10px; background: #111; margin-top: 30px; 
+      color: #aaa; font-size: 14px;
+    }
+  </style>
 </head>
 <body>
-    <button id="openUrl"><span class="catPaw">🎲</span> Open Random URL</button>
 
-    <div id="folderOptions"></div>
-    <script>
-        // Function to fetch and display folder options
-        function fetchAndDisplayFolders() {
-            fetch('http://localhost:3000/folders')
-                .then(response => response.json())
-                .then(folders => {
-                    const container = document.getElementById('folderOptions');
-                    folders.forEach(folder => {
-                        const checkbox = document.createElement('input');
-                        checkbox.type = 'checkbox';
-                        checkbox.id = folder;
-                        checkbox.value = folder;
-                        checkbox.checked = true; // Default to checked
-                        const label = document.createElement('label');
-                        label.htmlFor = folder;
-                        label.appendChild(document.createTextNode(folder));
-                        container.appendChild(checkbox);
-                        container.appendChild(label);
-                        container.appendChild(document.createElement('br'));
-                    });
-                })
-                .catch(error => console.error('Error:', error));
-        }
+<header>
+  <div id="stats">
+    Time: <span id="timeEl">00:00:00</span> | 
+    Checks: <span id="checksEl">0</span> | 
+    Hits: <span id="hitsEl">0</span> | 
+    /s: <span id="speedEl">0</span>
+  </div>
+  <div id="controls">
+    <button id="startBtn">Start</button>
+    <button id="stopBtn" disabled>Stop</button>
+  </div>
+</header>
 
-        document.getElementById('openUrl').addEventListener('click', function() {
-            const selectedFolders = Array.from(document.querySelectorAll('#folderOptions input[type=checkbox]:checked'))
-                                        .map(checkbox => checkbox.value);
-            fetch(`http://localhost:3000/random-url?folders=${selectedFolders.join(',')}`)
-                .then(response => response.json())
-                .then(data => {
-                    if (data.url) {
-                        window.open(data.url, '_blank');
-                    } else {
-                        console.error('No URL received');
-                    }
-                })
-                .catch(error => console.error('Error:', error));
-        });
+<div id="container"></div>
 
-        fetchAndDisplayFolders();
-    </script>
+<footer>
+  Be patient. If no hits at all within 10 minutes, something may be wrong.
+</footer>
+
+<script>
+/* Minimal single-interval .MP4 finder with notifications */
+
+const TEST_VIDEOS = [
+  "https://files.catbox.moe/mwx2pr.mp4",
+  "https://files.catbox.moe/0qo5p2.mp4"
+];
+
+let checks=0, hits=0, interval=null, startTime=0, stopFlag=false;
+
+function randomString(n=6){
+  const chars="abcdefghijklmnopqrstuvwxyz0123456789";
+  let out="";
+  while(out.length<n) out+=chars[Math.floor(Math.random()*chars.length)];
+  return out;
+}
+
+function formatTime(sec){
+  let h=Math.floor(sec/3600), m=Math.floor((sec%3600)/60), s=Math.floor(sec%60);
+  return `${String(h).padStart(2,"0")}:${String(m).padStart(2,"0")}:${String(s).padStart(2,"0")}`;
+}
+
+function updateStats(){
+  const elapsed=(Date.now()-startTime)/1000;
+  document.getElementById("timeEl").textContent=formatTime(elapsed);
+  document.getElementById("checksEl").textContent=checks;
+  document.getElementById("hitsEl").textContent=hits;
+  document.getElementById("speedEl").textContent=(checks/elapsed).toFixed(2);
+}
+
+function showVideo(url){
+  const wrap=document.createElement("div");
+  wrap.className="videoItem";
+  const vid=document.createElement("video");
+  vid.src=url; 
+  vid.controls=true;
+  wrap.appendChild(vid);
+  document.getElementById("container").appendChild(wrap);
+}
+
+function checkRandomMp4(){
+  if(stopFlag) return;
+  checks++;
+  const url="https://files.catbox.moe/"+randomString()+".mp4";
+  const probe=document.createElement("video");
+  probe.src=url;
+  probe.onloadedmetadata=()=>{
+    hits++;
+    showVideo(url);
+    if(Notification.permission==="granted"){
+      new Notification("Catbox Hit Found",{body:url});
+    }
+  };
+}
+
+function step(){
+  checkRandomMp4();
+  updateStats();
+}
+
+function startScraping(){
+  stopFlag=false;
+  startTime=Date.now();
+  if("Notification" in window) Notification.requestPermission();
+
+  // Show known test videos
+  TEST_VIDEOS.forEach(link=>{
+    checks++;
+    const tmp=document.createElement("video");
+    tmp.src=link;
+    tmp.onloadedmetadata=()=>{
+      hits++;
+      showVideo(link);
+      if(Notification.permission==="granted"){
+        new Notification("Catbox Hit Found",{body:link});
+      }
+    };
+  });
+
+  // Attempt about 10 random checks per second
+  interval=setInterval(step,100);
+}
+
+function stopScraping(){
+  stopFlag=true;
+  clearInterval(interval);
+}
+
+// Buttons
+document.getElementById("startBtn").onclick=()=>{
+  if(interval) return;
+  checks=0; hits=0; stopFlag=false;
+  document.getElementById("container").innerHTML="";
+  document.getElementById("startBtn").disabled=true;
+  document.getElementById("stopBtn").disabled=false;
+  startScraping();
+};
+
+document.getElementById("stopBtn").onclick=()=>{
+  document.getElementById("startBtn").disabled=false;
+  document.getElementById("stopBtn").disabled=true;
+  stopScraping();
+};
+</script>
+
 </body>
 </html>
