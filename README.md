@@ -1,5 +1,17 @@
 # Catbox Scraper Webui
 
+**Note:** The original Python-based scraper no longer works reliably due to changes on Catbox.  
+**Instead,** we now have a **static website** that scrapes from your **web browser**. It’s **slower** than Python, but still “fast enough” to find valid files without triggering Catbox rate limits.
+
+**Check it out here:**  
+[https://emrd95.github.io/catbox-scraper-webui/](https://emrd95.github.io/catbox-scraper-webui/)
+
+## What It Does
+
+- Randomly guesses Catbox file URLs in your **browser** (JavaScript).
+- Any valid `.mp4` (or other extension) loads instantly on the page.
+- It’s simpler, lower-impact, and less likely to get you blocked than brute-force Python scripts.
+- 
 An extremely fast python script for scraping and downloading random files from [Catbox](https://catbox.moe), a file-hosting site with a basic webui to browser them.
 
 The script takes from file extensions specified under config.yaml, generates random urls and checks to see if they are valid. If they are, it put the URLs in valids.txt that you can browser later with the webui. The script doesn't download anything to save bandwidth and go faster, if you wish to download all files, use [the original repo](https://github.com/dootss/catbox-scraper).
