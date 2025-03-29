@@ -6,7 +6,7 @@ This repo just contains a youtube shorts like webui to show catbox videos you fo
 **Demo:**  
 [https://emrd95.github.io/catbox-scraper-webui/](https://emrd95.github.io/catbox-scraper-webui/)
 
-Run with **python -m http.server** and acess at [http://localhost:8000/index.html](http://localhost:8000/index.html)
+Run with **python -m http.server** and access at [http://localhost:8000/index.html](http://localhost:8000/index.html)
 
 ## Old Setup (No Longer Maintained)
 
