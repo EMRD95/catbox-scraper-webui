@@ -2,166 +2,151 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Catbox MP4 Finder</title>
+  <title>Catbox MP4 Viewer (Shorts Style)</title>
   <style>
-    body {
-      margin: 0; padding: 0; background: #000; color: #fff; 
-      font-family: sans-serif; padding-top: 60px; 
+    html, body {
+      margin: 0;
+      padding: 0;
+      background: #000;
+      color: #fff;
+      font-family: sans-serif;
+      height: 100%;
+      overflow: hidden;
     }
     header {
-      position: fixed; top: 0; left: 0; width: 100%;
-      background: #222; text-align: center; padding: 10px; z-index: 999;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      background: #222;
+      text-align: center;
+      padding: 10px;
+      z-index: 999;
     }
-    #stats, #controls { margin: 5px; }
-    button {
-      background: #555; color: #fff; border: none; padding: 8px;
-      border-radius: 5px; margin: 5px; cursor: pointer;
-    }
-    #startBtn { background: #28a745; }
-    #stopBtn  { background: #dc3545; }
-    /* Container: full width on mobile, up to 900px on desktop */
+    /* The container below the header becomes scrollable */
     #container {
-      width: 100%; max-width: 900px; margin: 80px auto 0; 
-      padding: 0 10px; /* small side padding for desktop */
+      position: absolute;
+      top: 60px; /* header height */
+      left: 0;
+      right: 0;
+      bottom: 0;
+      overflow-y: scroll;
+      scroll-snap-type: y mandatory;
     }
     .videoItem {
-      width: 100%; margin: 0; padding: 0; margin-bottom: 20px;
-      background: #111; border-radius: 5px; overflow: hidden;
+      width: 100%;
+      height: 100vh; /* each video takes the full viewport height */
+      scroll-snap-align: start;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #000;
     }
     .videoItem video {
-      display: block; width: 100%; height: auto; object-fit: contain; background: #000;
+      max-width: 100%;
+      max-height: 600px;
+      object-fit: cover; /* fill the screen like Shorts/TikTok */
     }
     footer {
-      text-align: center; padding: 10px; background: #111; margin-top: 30px; 
-      color: #aaa; font-size: 14px;
+      text-align: center;
+      padding: 10px;
+      background: #111;
+      color: #aaa;
+      font-size: 14px;
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      z-index: 999;
     }
   </style>
 </head>
 <body>
+  <header>
+    <h1>Catbox MP4 Viewer</h1>
+  </header>
 
-<header>
-  <div id="stats">
-    Time: <span id="timeEl">00:00:00</span> | 
-    Checks: <span id="checksEl">0</span> | 
-    Hits: <span id="hitsEl">0</span> | 
-    /s: <span id="speedEl">0</span>
-  </div>
-  <div id="controls">
-    <button id="startBtn">Start</button>
-    <button id="stopBtn" disabled>Stop</button>
-  </div>
-</header>
+  <div id="container"></div>
 
-<div id="container"></div>
+  <footer>
+    <p>Scroll down for more videos</p>
+  </footer>
 
-<footer>
-  Be patient. If no hits at all within 10 minutes, something may be wrong.
-</footer>
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      let videoUrls = [];
+      let currentIndex = 0;
+      const container = document.getElementById('container');
 
-<script>
-/* Minimal single-interval .MP4 finder with notifications */
+      // Observer to load the next video when the current last video is mostly visible
+      const loadObserver = new IntersectionObserver((entries, observer) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            observer.unobserve(entry.target);
+            loadNextVideo();
+          }
+        });
+      }, { threshold: 0.6 });
 
-const TEST_VIDEOS = [
-  "https://files.catbox.moe/mwx2pr.mp4",
-  "https://files.catbox.moe/0qo5p2.mp4"
-];
+      // Observer to control playback: only the last video (the newest one) should play.
+      const playPauseObserver = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+          const video = entry.target.querySelector('video');
+          // Only play if the videoItem is the last child in the container.
+          if (entry.isIntersecting && entry.target === container.lastElementChild) {
+            video.play();
+          } else {
+            video.pause();
+            video.currentTime = 0; // reset to beginning so sound doesn't resume later
+          }
+        });
+      }, { threshold: 0.75 });
 
-let checks=0, hits=0, interval=null, startTime=0, stopFlag=false;
+      // Fetch the list of valid URLs from valid_urls/valids.txt
+      fetch('valid_urls/valids.txt')
+        .then(response => response.text())
+        .then(text => {
+          videoUrls = text.split('\n')
+            .map(line => line.trim())
+            .filter(line => line);
+          // Shuffle the list so videos play in random order
+          shuffleArray(videoUrls);
+          // Load the first video
+          loadNextVideo();
+        })
+        .catch(error => console.error('Error loading video URLs:', error));
 
-function randomString(n=6){
-  const chars="abcdefghijklmnopqrstuvwxyz0123456789";
-  let out="";
-  while(out.length<n) out+=chars[Math.floor(Math.random()*chars.length)];
-  return out;
-}
-
-function formatTime(sec){
-  let h=Math.floor(sec/3600), m=Math.floor((sec%3600)/60), s=Math.floor(sec%60);
-  return `${String(h).padStart(2,"0")}:${String(m).padStart(2,"0")}:${String(s).padStart(2,"0")}`;
-}
-
-function updateStats(){
-  const elapsed=(Date.now()-startTime)/1000;
-  document.getElementById("timeEl").textContent=formatTime(elapsed);
-  document.getElementById("checksEl").textContent=checks;
-  document.getElementById("hitsEl").textContent=hits;
-  document.getElementById("speedEl").textContent=(checks/elapsed).toFixed(2);
-}
-
-function showVideo(url){
-  const wrap=document.createElement("div");
-  wrap.className="videoItem";
-  const vid=document.createElement("video");
-  vid.src=url; 
-  vid.controls=true;
-  wrap.appendChild(vid);
-  document.getElementById("container").appendChild(wrap);
-}
-
-function checkRandomMp4(){
-  if(stopFlag) return;
-  checks++;
-  const url="https://files.catbox.moe/"+randomString()+".mp4";
-  const probe=document.createElement("video");
-  probe.src=url;
-  probe.onloadedmetadata=()=>{
-    hits++;
-    showVideo(url);
-    if(Notification.permission==="granted"){
-      new Notification("Catbox Hit Found",{body:url});
-    }
-  };
-}
-
-function step(){
-  checkRandomMp4();
-  updateStats();
-}
-
-function startScraping(){
-  stopFlag=false;
-  startTime=Date.now();
-  if("Notification" in window) Notification.requestPermission();
-
-  // Show known test videos
-  TEST_VIDEOS.forEach(link=>{
-    checks++;
-    const tmp=document.createElement("video");
-    tmp.src=link;
-    tmp.onloadedmetadata=()=>{
-      hits++;
-      showVideo(link);
-      if(Notification.permission==="granted"){
-        new Notification("Catbox Hit Found",{body:link});
+      // Fisher-Yates shuffle algorithm
+      function shuffleArray(array) {
+        for (let i = array.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [array[i], array[j]] = [array[j], array[i]];
+        }
       }
-    };
-  });
 
-  // Attempt about 10 random checks per second
-  interval=setInterval(step,100);
-}
+      // Load the next video into the container
+      function loadNextVideo() {
+        if (currentIndex >= videoUrls.length) {
+          console.log('No more videos.');
+          return;
+        }
+        const url = videoUrls[currentIndex++];
+        const videoItem = document.createElement('div');
+        videoItem.className = 'videoItem';
 
-function stopScraping(){
-  stopFlag=true;
-  clearInterval(interval);
-}
+        const video = document.createElement('video');
+        video.src = url;
+        video.controls = true;
+        // Optionally, set autoplay if desired:
+        // video.autoplay = true;
+        videoItem.appendChild(video);
+        container.appendChild(videoItem);
 
-// Buttons
-document.getElementById("startBtn").onclick=()=>{
-  if(interval) return;
-  checks=0; hits=0; stopFlag=false;
-  document.getElementById("container").innerHTML="";
-  document.getElementById("startBtn").disabled=true;
-  document.getElementById("stopBtn").disabled=false;
-  startScraping();
-};
-
-document.getElementById("stopBtn").onclick=()=>{
-  document.getElementById("startBtn").disabled=false;
-  document.getElementById("stopBtn").disabled=true;
-  stopScraping();
-};
-</script>
-
+        // Observe this videoItem for loading the next one and controlling playback
+        loadObserver.observe(videoItem);
+        playPauseObserver.observe(videoItem);
+      }
+    });
+  </script>
 </body>
 </html>
